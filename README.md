@@ -60,7 +60,7 @@ npm install -g chrome-extension-tester-mcp
 ### Option C — clone and run locally
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/chrome-extension-testing-mcp.git
+git clone https://github.com/BHUVAN-RJ/chrome-extension-testing-mcp.git
 cd chrome-extension-testing-mcp
 npm install
 npx playwright install chromium
