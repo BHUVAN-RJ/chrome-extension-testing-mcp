@@ -1,0 +1,45 @@
+{
+  "name": "chrome-extension-tester-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for interactive Chrome extension testing via Playwright — load, interact, assert, inspect storage, network, badges, messaging, tabs, and more.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "chrome-extension-tester": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "postinstall": "playwright install chromium"
+  },
+  "files": [
+    "src/"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "chrome-extension",
+    "testing",
+    "playwright",
+    "automation",
+    "browser-testing",
+    "claude"
+  ],
+  "author": "bhuvanrj",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/chrome-extension-testing-mcp"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/chrome-extension-testing-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/chrome-extension-testing-mcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "playwright": "^1.44.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
