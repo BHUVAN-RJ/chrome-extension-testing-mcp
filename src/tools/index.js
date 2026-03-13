@@ -11,6 +11,7 @@ import * as contextMenu from "./context-menu.js";
 import * as badge from "./badge.js";
 import * as messaging from "./messaging.js";
 import * as tabs from "./tabs.js";
+import * as accountLogin from "./account-login.js";
 
 const allTools = [
   loadExtension,
@@ -26,6 +27,7 @@ const allTools = [
   badge,
   messaging,
   tabs,
+  accountLogin,
 ];
 
 export const TOOLS = allTools.map((t) => t.definition);

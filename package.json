@@ -1,6 +1,6 @@
 {
   "name": "chrome-extension-tester-mcp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "MCP server for interactive Chrome extension testing via Playwright — load, interact, assert, inspect storage, network, badges, messaging, tabs, and more.",
   "type": "module",
   "main": "src/index.js",

@@ -32,6 +32,7 @@ An **MCP (Model Context Protocol) server** that lets Claude interactively test a
 - Test context menu registration and handler invocation
 - Run assertions that return structured PASS / FAIL results
 - Take screenshots at any point during testing
+- Create and reuse test accounts on any website using disposable email (via Guerrilla Mail API)
 
 ---
 
@@ -139,6 +140,7 @@ Add to your project's `.mcp.json` or user-level MCP config:
 | `send_message_to_background` | Send `chrome.runtime.sendMessage` from the popup context and return the response |
 | `test_context_menu` | Check `contextMenus` API availability, simulate right-click, or invoke a menu item handler directly |
 | `simulate_tab_events` | Open, close, switch, list, or close all browser tabs |
+| `test_account_login` | Create or reuse a test account on any website using a disposable email; credentials are stored in `test-accounts.json` and reused across sessions |
 
 ---
 
@@ -218,6 +220,14 @@ Open a tab to https://news.ycombinator.com, then another to https://github.com, 
 Right-click on https://example.com and trigger the context menu item with id "my-action"
 ```
 
+```
+Create a test account on https://example.com/signup and save it as "my_test_account"
+```
+
+```
+Log in to https://example.com/login using the stored "my_test_account" credentials
+```
+
 ---
 
 ## Project Structure
@@ -244,7 +254,8 @@ chrome-extension-testing-mcp/
 │       ├── context-menu.js
 │       ├── badge.js
 │       ├── messaging.js
-│       └── tabs.js
+│       ├── tabs.js
+│       └── account-login.js
 ├── package.json
 └── README.md
 ```
@@ -259,6 +270,8 @@ chrome-extension-testing-mcp/
 - Call `load_extension` again at any time to get a fresh browser instance
 - Native Chrome context menus cannot be automated by Playwright — use `test_context_menu` with `trigger_item` to invoke handlers directly
 - Badge and storage tools communicate via the service worker, so the extension must have a background service worker (MV3)
+- `test_account_login` uses the [Guerrilla Mail API](https://www.guerrillamail.com/GuerrillaMailAPI.html) to generate disposable emails — no browser navigation required, no bot-blocking. Credentials are stored in `test-accounts.json` at the project root (add this to `.gitignore`)
+- Use `action: "auto"` for `test_account_login` to automatically reuse stored credentials or create a new account if none exist
 
 ---
 

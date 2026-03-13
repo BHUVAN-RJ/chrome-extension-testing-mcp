@@ -42,6 +42,25 @@ export async function ensurePage() {
   return state.page;
 }
 
+/**
+ * Like ensurePage but launches a plain headed Chromium if no browser is running yet.
+ * Used by tools that don't require an extension (e.g. test_account_login).
+ */
+export async function ensurePageStandalone() {
+  if (!state.browser) {
+    state.browser = await chromium.launchPersistentContext("", {
+      headless: false,
+    });
+    state.page = await state.browser.newPage();
+  }
+
+  if (!state.page || state.page.isClosed()) {
+    state.page = await state.browser.newPage();
+  }
+
+  return state.page;
+}
+
 export async function getServiceWorker() {
   if (!state.browser) throw new Error("Browser not started. Call load_extension first.");
   const workers = state.browser.serviceWorkers();
