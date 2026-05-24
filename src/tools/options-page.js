@@ -29,7 +29,7 @@ export const definition = {
 
 export async function handler(args) {
   if (!state.extensionId) {
-    return { content: [{ type: "text", text: "Extension ID not detected. Call load_extension first." }] };
+    return { content: [{ type: "text", text: "Extension ID not detected. Call load_extension first." }], isError: true };
   }
 
   const pageName = args.page || "options.html";

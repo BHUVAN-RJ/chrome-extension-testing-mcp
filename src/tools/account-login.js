@@ -509,6 +509,7 @@ export async function handler(args) {
             `No stored credentials found for "${key}". ` +
             `Use action: "create" or "auto" to create an account first.`,
         }],
+        isError: true,
       };
     }
 
@@ -521,6 +522,7 @@ export async function handler(args) {
             `No login_url provided and none stored for "${key}". ` +
             `Pass login_url as an argument.`,
         }],
+        isError: true,
       };
     }
 
@@ -545,6 +547,7 @@ export async function handler(args) {
             `Login form interaction failed for "${key}": ${formError.message}\n` +
             `Screenshot: ${screenshotPath}`,
         }],
+        isError: true,
       };
     }
 
@@ -576,6 +579,7 @@ export async function handler(args) {
             `Use action: "create" to generate a new account.\n` +
             `Screenshot: ${screenshotPath}`,
         }],
+        isError: true,
       };
     }
 
@@ -608,6 +612,7 @@ export async function handler(args) {
           type: "text",
           text: `signup_url is required when action is "${args.action}".`,
         }],
+        isError: true,
       };
     }
 
@@ -620,5 +625,6 @@ export async function handler(args) {
       type: "text",
       text: `Unknown action: "${args.action}". Valid values are "auto", "create", or "login".`,
     }],
+    isError: true,
   };
 }

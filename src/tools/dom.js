@@ -43,5 +43,5 @@ export async function handler(args) {
     };
   }
 
-  return { content: [{ type: "text", text: "Provide either a selector or a script." }] };
+  return { content: [{ type: "text", text: "Provide either a selector or a script." }], isError: true };
 }

@@ -47,7 +47,7 @@ export async function handler(args) {
 
   if (args.action === "set") {
     if (!args.data || !Object.keys(args.data).length) {
-      return { content: [{ type: "text", text: "Provide a 'data' object for the set action." }] };
+      return { content: [{ type: "text", text: "Provide a 'data' object for the set action." }], isError: true };
     }
     await sw.evaluate(
       ({ area, data }) => new Promise((resolve) => chrome.storage[area].set(data, resolve)),
@@ -60,7 +60,7 @@ export async function handler(args) {
 
   if (args.action === "remove") {
     if (!args.keys?.length) {
-      return { content: [{ type: "text", text: "Provide 'keys' array for the remove action." }] };
+      return { content: [{ type: "text", text: "Provide 'keys' array for the remove action." }], isError: true };
     }
     await sw.evaluate(
       ({ area, keys }) => new Promise((resolve) => chrome.storage[area].remove(keys, resolve)),

@@ -63,7 +63,7 @@ export async function handler(args) {
 
   if (args.action === "assert_color") {
     if (!args.expected_color?.length) {
-      return { content: [{ type: "text", text: "Provide an 'expected_color' RGBA array for assert_color." }] };
+      return { content: [{ type: "text", text: "Provide an 'expected_color' RGBA array for assert_color." }], isError: true };
     }
     const passed = args.expected_color.every((v, i) => v === badge.color[i]);
     return {

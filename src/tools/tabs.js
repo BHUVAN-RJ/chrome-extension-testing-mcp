@@ -51,7 +51,7 @@ export async function handler(args) {
   if (args.action === "switch") {
     const pages = state.browser.pages();
     if (args.tab_index === undefined || args.tab_index < 0 || args.tab_index >= pages.length) {
-      return { content: [{ type: "text", text: `Invalid tab_index ${args.tab_index}. Run 'list' to see available tabs.` }] };
+      return { content: [{ type: "text", text: `Invalid tab_index ${args.tab_index}. Run 'list' to see available tabs.` }], isError: true };
     }
     state.page = pages[args.tab_index];
     await state.page.bringToFront();
@@ -61,7 +61,7 @@ export async function handler(args) {
   if (args.action === "close") {
     const pages = state.browser.pages();
     if (args.tab_index === undefined || args.tab_index < 0 || args.tab_index >= pages.length) {
-      return { content: [{ type: "text", text: `Invalid tab_index ${args.tab_index}. Run 'list' to see available tabs.` }] };
+      return { content: [{ type: "text", text: `Invalid tab_index ${args.tab_index}. Run 'list' to see available tabs.` }], isError: true };
     }
     const toClose = pages[args.tab_index];
     const closedUrl = toClose.url();

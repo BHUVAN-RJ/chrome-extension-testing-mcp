@@ -50,7 +50,7 @@ export async function handler(args) {
   }
 
   if (args.action === "navigate_and_capture") {
-    if (!args.url) return { content: [{ type: "text", text: "Provide a 'url' to navigate to." }] };
+    if (!args.url) return { content: [{ type: "text", text: "Provide a 'url' to navigate to." }], isError: true };
 
     const p = await ensurePage();
     const captured = [];

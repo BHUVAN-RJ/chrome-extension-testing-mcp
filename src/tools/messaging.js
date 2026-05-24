@@ -21,7 +21,7 @@ export const definition = {
 
 export async function handler(args) {
   if (!state.extensionId) {
-    return { content: [{ type: "text", text: "Extension ID not detected. Call load_extension first." }] };
+    return { content: [{ type: "text", text: "Extension ID not detected. Call load_extension first." }], isError: true };
   }
 
   const p = await ensurePage();
@@ -54,7 +54,7 @@ export async function handler(args) {
   );
 
   if (result.error) {
-    return { content: [{ type: "text", text: `Message failed: ${result.error}` }] };
+    return { content: [{ type: "text", text: `Message failed: ${result.error}` }], isError: true };
   }
 
   return {

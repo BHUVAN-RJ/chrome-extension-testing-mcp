@@ -50,7 +50,7 @@ export async function handler(args) {
         detail = `Element "${args.selector}" exists`;
       }
     } else {
-      return { content: [{ type: "text", text: "Provide a selector or script for the assertion." }] };
+      return { content: [{ type: "text", text: "Provide a selector or script for the assertion." }], isError: true };
     }
   } catch (e) {
     passed = false;

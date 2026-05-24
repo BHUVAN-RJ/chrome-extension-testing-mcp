@@ -28,6 +28,7 @@ export async function handler(args) {
   if (!state.extensionId && args.action === "open") {
     return {
       content: [{ type: "text", text: "Extension ID not detected. Make sure the extension has a background service worker." }],
+      isError: true,
     };
   }
 

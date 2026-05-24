@@ -50,7 +50,7 @@ export async function handler(args) {
   }
 
   if (args.action === "right_click") {
-    if (!args.selector) return { content: [{ type: "text", text: "Provide a 'selector' for right_click action." }] };
+    if (!args.selector) return { content: [{ type: "text", text: "Provide a 'selector' for right_click action." }], isError: true };
     const p = await ensurePage();
     if (args.url) await p.goto(args.url, { waitUntil: "domcontentloaded" });
     await p.click(args.selector, { button: "right" });
@@ -63,7 +63,7 @@ export async function handler(args) {
   }
 
   if (args.action === "trigger_item") {
-    if (!args.menu_item_id) return { content: [{ type: "text", text: "Provide a 'menu_item_id' to trigger." }] };
+    if (!args.menu_item_id) return { content: [{ type: "text", text: "Provide a 'menu_item_id' to trigger." }], isError: true };
     const sw = await getServiceWorker();
     // Directly invoke the onClicked listener by dispatching a synthetic event via the SW
     const result = await sw.evaluate(({ menuItemId, pageUrl }) => {
