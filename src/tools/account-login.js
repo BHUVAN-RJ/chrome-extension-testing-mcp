@@ -427,7 +427,7 @@ function buildCredentialEntry(email, password, args, verified, verifiedAt, verif
 export const definition = {
   name: "test_account_login",
   description:
-    "Create or reuse a test account for a website using a disposable email from temp-mail.org. " +
+    "Create or reuse a test account for a website using a disposable email from Guerrilla Mail. " +
     "Credentials are stored in test-accounts.json and reused across test sessions. " +
     "Use action='auto' to login if credentials exist or create new ones if they don't.",
   inputSchema: {
@@ -590,7 +590,7 @@ export async function handler(args) {
           type: "text",
           text:
             `Logged in but the site is asking for email verification.\n` +
-            `Navigate to temp-mail.org to find and click the verification link.\n` +
+            `Navigate to Guerrilla Mail to find and click the verification link.\n` +
             `Screenshot: ${screenshotPath}`,
         }],
       };
