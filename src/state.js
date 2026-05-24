@@ -23,13 +23,17 @@ export async function ensureBrowser(extensionPath) {
     ],
   });
 
-  await new Promise((r) => setTimeout(r, 1000));
-  const workers = state.browser.serviceWorkers();
-  if (workers.length > 0) {
-    const url = workers[0].url();
-    const match = url.match(/chrome-extension:\/\/([a-z]{32})\//);
-    if (match) state.extensionId = match[1];
+  // Prefer an already-registered service worker; otherwise wait for one to register.
+  const existingWorkers = state.browser.serviceWorkers();
+  let workerUrl = existingWorkers.length > 0 ? existingWorkers[0].url() : null;
+
+  if (!workerUrl) {
+    const worker = await state.browser.waitForEvent("serviceworker", { timeout: 5000 });
+    workerUrl = worker.url();
   }
+
+  const extensionIdMatch = workerUrl.match(/chrome-extension:\/\/([a-z]{32})\//);
+  if (extensionIdMatch) state.extensionId = extensionIdMatch[1];
 
   state.page = await state.browser.newPage();
 }
