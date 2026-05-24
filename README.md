@@ -15,6 +15,7 @@ An **MCP (Model Context Protocol) server** that lets Claude interactively test a
 - [Setup with Claude Code (npx)](#setup-with-claude-code-npx)
 - [Available Tools](#available-tools)
 - [Testing Agent Prompt](#testing-agent-prompt)
+- [Example: testing an extension popup](#example-testing-an-extension-popup)
 - [Example Prompts](#example-prompts)
 - [Project Structure](#project-structure)
 - [Notes](#notes)
@@ -265,6 +266,52 @@ Use the extension-tester-agent prompt with:
 ```
 
 Claude will write the test plan, execute every test, and return a full report.
+
+---
+
+## Example: testing an extension popup
+
+A typical loop the agent can run on its own:
+
+**1. Load the extension**
+
+```json
+{ "tool": "load_extension", "arguments": { "extension_path": "/tmp/my-extension" } }
+```
+
+```
+Extension loaded.
+Path: /tmp/my-extension
+Extension ID: ddnjmkpjnchafihagpljebmkdpejhaoj
+```
+
+**2. Open the popup and read its HTML**
+
+```json
+{ "tool": "interact_with_popup", "arguments": { "action": "open" } }
+```
+
+```html
+<body>
+  <h1>Tab Saver</h1>
+  <button id="save">Save open tabs</button>
+  <span id="count">0 saved</span>
+</body>
+```
+
+**3. Read local storage**
+
+```json
+{ "tool": "extension_storage", "arguments": { "action": "get", "area": "local" } }
+```
+
+```json
+storage.local contents:
+{
+  "savedTabs": [],
+  "enabled": true
+}
+```
 
 ---
 
