@@ -46,7 +46,7 @@ export async function handler(args) {
     return {
       content: [{
         type: "text",
-        text: `Badge Text: "${badge.text || "(empty)"}\nBadge Color (RGBA): [${badge.color.join(", ")}]`,
+        text: `Badge Text: "${badge.text || "(empty)"}"\nBadge Color (RGBA): [${badge.color.join(", ")}]`,
       }],
     };
   }
