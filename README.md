@@ -149,6 +149,76 @@ Add to your project's `.mcp.json` or user-level MCP config:
 | `simulate_tab_events` | Open, close, switch, list, or close all browser tabs |
 | `test_account_login` | Create or reuse a test account on any website using a disposable email; credentials are stored in `test-accounts.json` and reused across sessions |
 
+### `load_extension`
+Launch Chromium with an unpacked extension and capture its ID.
+**Inputs:** `extension_path` (string, required) — path to the unpacked extension folder.
+**Returns:** Text confirming the resolved path and the detected extension ID.
+
+### `interact_with_popup`
+Open the popup and click, type, or read its DOM.
+**Inputs:** `action` (string, required: `open` | `click` | `type` | `get_text` | `get_html`); `selector` (string); `value` (string, for `type`).
+**Returns:** Text describing the action result, or the requested text/HTML.
+
+### `open_options_page`
+Open the options page (or any extension page) and interact with it.
+**Inputs:** `page` (string, default `options.html`); `action` (string: `open` | `click` | `type` | `get_text` | `get_html`); `selector` (string); `value` (string).
+**Returns:** Text describing the action result, or the requested text/HTML.
+
+### `inspect_dom`
+Query a selector or evaluate JS in a page, optionally navigating first.
+**Inputs:** `url` (string); `selector` (string); `script` (string, overrides `selector`).
+**Returns:** Text with matched elements' outerHTML, or the JSON-serialized script result.
+
+### `get_service_worker_logs`
+Read buffered background service worker console logs.
+**Inputs:** `clear_after` (boolean, default `false`).
+**Returns:** Text listing captured log entries, or a "none captured yet" message.
+
+### `take_screenshot`
+Save a screenshot of the current page or popup.
+**Inputs:** `output_path` (string, default `./screenshot.png`); `full_page` (boolean, default `false`).
+**Returns:** Text with the saved file path.
+
+### `run_assertion`
+Assert an element exists/has text, or that a JS expression is truthy.
+**Inputs:** `description` (string, required); `selector` (string); `expected_text` (string); `script` (string, overrides `selector`).
+**Returns:** Text beginning with `PASS` or `FAIL`, followed by detail.
+
+### `extension_storage`
+Read from or write to `chrome.storage` (local / sync / session).
+**Inputs:** `action` (string, required: `get` | `set` | `remove` | `clear`); `area` (string, default `local`); `keys` (string[]); `data` (object, for `set`).
+**Returns:** Text with storage contents, or a confirmation of the write/removal.
+
+### `monitor_network`
+Capture and inspect network requests during navigation.
+**Inputs:** `action` (string, required: `navigate_and_capture` | `get_captured` | `clear`); `url` (string); `filter_pattern` (string); `include_types` (string[]).
+**Returns:** Text listing captured requests as `[method] [type] status url`.
+
+### `check_badge`
+Read or assert the action badge text and background color.
+**Inputs:** `action` (string, required: `get` | `assert_text` | `assert_color`); `tab_id` (number); `expected_text` (string); `expected_color` (number[] RGBA).
+**Returns:** Text with the badge value, or a `PASS` / `FAIL` assertion result.
+
+### `send_message_to_background`
+Send `chrome.runtime.sendMessage` from the popup and return the response.
+**Inputs:** `message` (object, required); `timeout_ms` (number, default `5000`).
+**Returns:** Text with the sent message and JSON response, or a failure message.
+
+### `test_context_menu`
+Check the `contextMenus` API, simulate a right-click, or trigger an item.
+**Inputs:** `action` (string, required: `check_api` | `right_click` | `trigger_item`); `url` (string); `selector` (string); `menu_item_id` (string); `page_url` (string).
+**Returns:** Text with API availability, dispatch confirmation, or trigger result.
+
+### `simulate_tab_events`
+Open, close, switch, list, or close all browser tabs.
+**Inputs:** `action` (string, required: `open` | `close` | `switch` | `list` | `close_all`); `url` (string); `tab_index` (number).
+**Returns:** Text describing the affected tab(s), or the list of open tabs.
+
+### `test_account_login`
+Create or reuse a test account on a site using a disposable email.
+**Inputs:** `action` (string, required: `auto` | `create` | `login`); `account_key` (string, required); `signup_url` / `login_url` (string); selector overrides (`email_selector`, `password_selector`, `submit_selector`, `pre_click_selector`); multi-step fields (`step2_url`, `step2_password_selector`, `step2_submit_selector`).
+**Returns:** Text reporting account creation/login status plus a screenshot path.
+
 ---
 
 ## Testing Agent Prompt
