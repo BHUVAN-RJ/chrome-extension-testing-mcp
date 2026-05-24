@@ -7,11 +7,16 @@ import {
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { readFileSync } from "fs";
 import { TOOLS, HANDLERS } from "./tools/index.js";
 import { PROMPTS, PROMPT_HANDLERS } from "./prompts/index.js";
 
+// Read the version from package.json so it never drifts from the published value.
+const packageJsonUrl = new URL("../package.json", import.meta.url);
+const pkg = JSON.parse(readFileSync(packageJsonUrl, "utf-8"));
+
 const server = new Server(
-  { name: "chrome-extension-tester", version: "2.0.0" },
+  { name: "chrome-extension-tester", version: pkg.version },
   { capabilities: { tools: {}, prompts: {} } }
 );
 
@@ -64,4 +69,4 @@ server.setRequestHandler(GetPromptRequestSchema, async (request) => {
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("Chrome Extension Tester MCP server running (v2.0.0)...");
+console.error(`Chrome Extension Tester MCP server running (v${pkg.version})...`);
