@@ -7,6 +7,7 @@ An **MCP (Model Context Protocol) server** that lets Claude interactively test a
 ## Table of Contents
 
 - [Why](#why)
+- [Architecture](#architecture)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -23,6 +24,18 @@ An **MCP (Model Context Protocol) server** that lets Claude interactively test a
 ## Why
 
 Testing a Chrome extension during development means manually clicking reload, opening the popup, checking storage in DevTools, watching the service worker console, and copy-pasting errors back to the agent on every iteration. This MCP server gives an AI coding agent direct access to all of that through tool calls, so the agent can iterate on its own. It exists because the manual loop made working with Claude Code on extensions too slow.
+
+---
+
+## Architecture
+
+```mermaid
+graph LR
+    A[AI Agent<br/>Claude / Cursor] -->|MCP protocol| B[This server<br/>14 tools]
+    B -->|Playwright| C[Chromium<br/>persistent context]
+    C -->|loads| D[Extension under test]
+    B -.->|reads / writes| E[(state.js<br/>browser, page, extensionId)]
+```
 
 ---
 
