@@ -32,7 +32,7 @@ Testing a Chrome extension during development means manually clicking reload, op
 
 ```mermaid
 graph LR
-    A[AI Agent<br/>Claude / Cursor] -->|MCP protocol| B[This server<br/>14 tools]
+    A[AI Agent<br/>Claude / Cursor] -->|MCP protocol| B[This server<br/>15 tools]
     B -->|Playwright| C[Chromium<br/>persistent context]
     C -->|loads| D[Extension under test]
     B -.->|reads / writes| E[(state.js<br/>browser, page, extensionId)]
@@ -54,6 +54,7 @@ graph LR
 - Run assertions that return structured PASS / FAIL results
 - Take screenshots at any point during testing
 - Create and reuse test accounts on any website using disposable email (via Guerrilla Mail API)
+- Inspect, set, delete, and assert browser cookies — including `httpOnly` cookies invisible to `document.cookie`
 
 ---
 
@@ -162,6 +163,7 @@ Add to your project's `.mcp.json` or user-level MCP config:
 | `test_context_menu` | Check `contextMenus` API availability, simulate right-click, or invoke a menu item handler directly |
 | `simulate_tab_events` | Open, close, switch, list, or close all browser tabs |
 | `test_account_login` | Create or reuse a test account on any website using a disposable email; credentials are stored in `test-accounts.json` and reused across sessions |
+| `manage_cookies` | Inspect, set, delete, clear, or assert browser cookies at the Playwright context layer (reads `httpOnly` cookies) |
 
 ### `load_extension`
 Launch Chromium with an unpacked extension and capture its ID.
@@ -232,6 +234,11 @@ Open, close, switch, list, or close all browser tabs.
 Create or reuse a test account on a site using a disposable email.
 **Inputs:** `action` (string, required: `auto` | `create` | `login`); `account_key` (string, required); `signup_url` / `login_url` (string); selector overrides (`email_selector`, `password_selector`, `submit_selector`, `pre_click_selector`); multi-step fields (`step2_url`, `step2_password_selector`, `step2_submit_selector`).
 **Returns:** Text reporting account creation/login status plus a screenshot path.
+
+### `manage_cookies`
+Inspect, edit, delete, or assert browser cookies (operates on the Playwright browser context, so it works regardless of the extension's permissions and can read `httpOnly` cookies). Requires a browser started via `load_extension`.
+**Inputs:** `action` (string, required: `get` | `set` | `delete` | `clear` | `assert`); `url` (string — scope for `get`/`assert`, or the cookie URL for `set`); `name` (string — filter for `get`, target for `delete`, required for `assert`); `cookie` (object, for `set`: `name`, `value`, `url` or `domain`+`path`, plus optional `expires`, `httpOnly`, `secure`, `sameSite`); `domain` / `path` (string filters for `delete`); `expected_value` (string, for `assert`).
+**Returns:** JSON-serialized cookies for `get`; a confirmation for `set`/`delete`/`clear`; a `PASS` / `FAIL` line for `assert`.
 
 ---
 

@@ -12,6 +12,7 @@ import * as badge from "./badge.js";
 import * as messaging from "./messaging.js";
 import * as tabs from "./tabs.js";
 import * as accountLogin from "./account-login.js";
+import * as cookies from "./cookies.js";
 
 const allTools = [
   loadExtension,
@@ -28,6 +29,7 @@ const allTools = [
   messaging,
   tabs,
   accountLogin,
+  cookies,
 ];
 
 export const TOOLS = allTools.map((t) => t.definition);
