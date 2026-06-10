@@ -71,3 +71,8 @@ export async function getServiceWorker() {
   if (!workers.length) throw new Error("No service worker found. Extension may not have a background service worker.");
   return workers[0];
 }
+
+export function getContext() {
+  if (!state.browser) throw new Error("Browser not started. Call load_extension first.");
+  return state.browser;
+}

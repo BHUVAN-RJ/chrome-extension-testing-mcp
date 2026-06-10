@@ -46,6 +46,7 @@ You have access to the chrome-extension-tester MCP tools:
 - send_message_to_background → send chrome.runtime.sendMessage and capture the response
 - test_context_menu       → verify context menu API or simulate right-click events
 - simulate_tab_events     → open, close, switch, and list browser tabs
+- manage_cookies          → get/set/delete/clear/assert browser cookies, including httpOnly
 
 ---
 
