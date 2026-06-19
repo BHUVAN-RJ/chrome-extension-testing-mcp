@@ -4,6 +4,10 @@ import path from "path";
 
 export const state = {
   browser: null,
+  // BrowserContext when connected via CDP (browser.contexts()[0]); null when using launchPersistentContext
+  context: null,
+  // "launched" = Playwright owns the browser process; "cdp" = attached to user's real browser
+  connectionMode: null,
   page: null,
   extensionId: null,
   swLogs: [],
@@ -35,13 +39,15 @@ export async function ensureBrowser(extensionPath) {
   const extensionIdMatch = workerUrl.match(/chrome-extension:\/\/([a-z]{32})\//);
   if (extensionIdMatch) state.extensionId = extensionIdMatch[1];
 
+  state.connectionMode = "launched";
   state.page = await state.browser.newPage();
 }
 
 export async function ensurePage() {
   if (!state.page || state.page.isClosed()) {
-    if (!state.browser) throw new Error("Browser not started. Call load_extension first.");
-    state.page = await state.browser.newPage();
+    const ctx = state.context || state.browser;
+    if (!ctx) throw new Error("No browser connected. Call load_extension or connect_browser first.");
+    state.page = await ctx.newPage();
   }
   return state.page;
 }
@@ -55,19 +61,22 @@ export async function ensurePageStandalone() {
     state.browser = await chromium.launchPersistentContext("", {
       headless: false,
     });
+    state.connectionMode = "launched";
     state.page = await state.browser.newPage();
   }
 
   if (!state.page || state.page.isClosed()) {
-    state.page = await state.browser.newPage();
+    const ctx = state.context || state.browser;
+    state.page = await ctx.newPage();
   }
 
   return state.page;
 }
 
 export async function getServiceWorker() {
-  if (!state.browser) throw new Error("Browser not started. Call load_extension first.");
-  const workers = state.browser.serviceWorkers();
+  const ctx = state.context || state.browser;
+  if (!ctx) throw new Error("No browser connected. Call load_extension or connect_browser first.");
+  const workers = ctx.serviceWorkers();
   if (!workers.length) throw new Error("No service worker found. Extension may not have a background service worker.");
   return workers[0];
 }

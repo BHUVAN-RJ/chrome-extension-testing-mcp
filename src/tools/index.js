@@ -1,4 +1,5 @@
 import * as loadExtension from "./load-extension.js";
+import * as connectBrowser from "./connect-browser.js";
 import * as popup from "./popup.js";
 import * as dom from "./dom.js";
 import * as logs from "./logs.js";
@@ -15,6 +16,7 @@ import * as accountLogin from "./account-login.js";
 
 const allTools = [
   loadExtension,
+  connectBrowser,
   popup,
   dom,
   logs,

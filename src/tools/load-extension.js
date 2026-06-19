@@ -20,6 +20,8 @@ export async function handler(args) {
   if (state.browser) {
     await state.browser.close();
     state.browser = null;
+    state.context = null;
+    state.connectionMode = null;
     state.page = null;
     state.extensionId = null;
     state.swLogs.length = 0;
