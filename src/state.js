@@ -77,6 +77,18 @@ export async function getServiceWorker() {
   const ctx = state.context || state.browser;
   if (!ctx) throw new Error("No browser connected. Call load_extension or connect_browser first.");
   const workers = ctx.serviceWorkers();
+
+  if (state.extensionId) {
+    const targetWorker = workers.find((w) => w.url().includes(state.extensionId));
+    if (targetWorker) return targetWorker;
+    const workerList = workers.map((w) => `  ${w.url()}`).join("\n") || "  (none)";
+    throw new Error(
+      `No service worker found for extension ${state.extensionId}.\n` +
+      `Active workers:\n${workerList}\n` +
+      `Re-run connect_browser with the correct extension_id to retarget.`
+    );
+  }
+
   if (!workers.length) throw new Error("No service worker found. Extension may not have a background service worker.");
   return workers[0];
 }

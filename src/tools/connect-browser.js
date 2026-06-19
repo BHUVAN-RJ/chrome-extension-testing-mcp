@@ -14,18 +14,58 @@ const KNOWN_BROWSERS = [
     name: "Brave",
     executable: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
     userDataDir: `${os.homedir()}/Library/Application Support/BraveSoftware/Brave-Browser`,
+    extensionsDir: `${os.homedir()}/Library/Application Support/BraveSoftware/Brave-Browser/Default/Extensions`,
   },
   {
     name: "Chrome",
     executable: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     userDataDir: `${os.homedir()}/Library/Application Support/Google/Chrome`,
+    extensionsDir: `${os.homedir()}/Library/Application Support/Google/Chrome/Default/Extensions`,
   },
   {
     name: "Chromium",
     executable: "/Applications/Chromium.app/Contents/MacOS/Chromium",
     userDataDir: `${os.homedir()}/Library/Application Support/Chromium`,
+    extensionsDir: `${os.homedir()}/Library/Application Support/Chromium/Default/Extensions`,
   },
 ];
+
+function readExtensionManifest(extensionsDir, extensionId) {
+  try {
+    const versionDirs = fs.readdirSync(`${extensionsDir}/${extensionId}`);
+    for (const version of versionDirs) {
+      const manifestPath = `${extensionsDir}/${extensionId}/${version}/manifest.json`;
+      if (fs.existsSync(manifestPath)) {
+        return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function listInstalledExtensions(extensionsDir) {
+  if (!fs.existsSync(extensionsDir)) return [];
+  const ids = fs.readdirSync(extensionsDir).filter((d) => /^[a-z]{32}$/.test(d));
+  return ids.map((id) => {
+    const manifest = readExtensionManifest(extensionsDir, id);
+    const name = manifest?.name || "(unknown)";
+    return { id, name };
+  });
+}
+
+// Accepts a 32-char extension ID or a name substring; returns the resolved ID or throws on ambiguity.
+function resolveExtensionId(nameOrId, extensionsDir) {
+  if (/^[a-z]{32}$/.test(nameOrId)) return nameOrId;
+  const extensions = listInstalledExtensions(extensionsDir);
+  const needle = nameOrId.toLowerCase();
+  const matches = extensions.filter((e) => e.name.toLowerCase().includes(needle));
+  if (matches.length === 0) return null;
+  if (matches.length > 1) {
+    const list = matches.map((e) => `  ${e.id}  ${e.name}`).join("\n");
+    throw new Error(`"${nameOrId}" matched ${matches.length} extensions — pass the full ID instead:\n${list}`);
+  }
+  return matches[0].id;
+}
 
 async function fetchCdpVersionInfo(port) {
   try {
@@ -86,17 +126,18 @@ async function findExtensionIdFromTargets(port) {
 }
 
 function attachSwLogListeners(context) {
-  const existingWorkers = context.serviceWorkers();
-  existingWorkers.forEach((sw) => {
-    sw.on("console", (msg) =>
-      state.swLogs.push(`[${new Date().toISOString()}] ${msg.type()}: ${msg.text()}`)
-    );
-  });
-  context.on("serviceworker", (sw) => {
-    sw.on("console", (msg) =>
-      state.swLogs.push(`[${new Date().toISOString()}] ${msg.type()}: ${msg.text()}`)
-    );
-  });
+  const attachToWorker = (sw) => {
+    sw.on("console", (msg) => {
+      // Check state.extensionId at capture time so retargeting takes effect immediately.
+      const workerExtId = extractExtensionIdFromUrl(sw.url());
+      if (!state.extensionId || workerExtId === state.extensionId) {
+        state.swLogs.push(`[${new Date().toISOString()}] ${msg.type()}: ${msg.text()}`);
+      }
+    });
+  };
+
+  context.serviceWorkers().forEach(attachToWorker);
+  context.on("serviceworker", attachToWorker);
 }
 
 export async function teardownExistingConnection() {
@@ -184,11 +225,12 @@ export const definition = {
     properties: {
       action: {
         type: "string",
-        enum: ["scan", "connect", "launch"],
+        enum: ["scan", "connect", "launch", "list_extensions"],
         description:
           "'scan' — list running debuggable browsers and installed browsers. " +
           "'connect' — attach to a browser already running with --remote-debugging-port. " +
-          "'launch' — start an installed browser with your real profile and remote debugging, then connect.",
+          "'launch' — start an installed browser with your real profile and remote debugging, then connect. " +
+          "'list_extensions' — list all installed extensions with their IDs and names.",
       },
       port: {
         type: "number",
@@ -203,13 +245,43 @@ export const definition = {
         type: "number",
         description: "Port to use for remote debugging when launching (for 'launch' action). Defaults to 9222.",
       },
+      extension_id: {
+        type: "string",
+        description: "Extension ID (32 lowercase chars) or name substring to target (for 'connect' and 'launch' actions). Overrides auto-detection — pass the name (e.g. 'AudiTex') or full ID to pick the right extension when multiple are installed.",
+      },
+      browser_name_for_extensions: {
+        type: "string",
+        enum: ["Brave", "Chrome", "Chromium"],
+        description: "Which browser's extensions directory to scan (for 'list_extensions' action). Defaults to 'Brave'.",
+      },
     },
     required: ["action"],
   },
 };
 
+function getExtensionsDirForBrowser(browserName) {
+  const name = browserName || "Brave";
+  const config = KNOWN_BROWSERS.find((b) => b.name === name);
+  return config?.extensionsDir || null;
+}
+
 export async function handler(args) {
   const { action } = args;
+
+  if (action === "list_extensions") {
+    const extensionsDir = getExtensionsDirForBrowser(args.browser_name_for_extensions);
+    if (!extensionsDir || !fs.existsSync(extensionsDir)) {
+      throw new Error(`Extensions directory not found: ${extensionsDir}`);
+    }
+    const extensions = listInstalledExtensions(extensionsDir);
+    const lines = extensions.map((e) => `  ${e.id}  ${e.name}`);
+    return {
+      content: [{
+        type: "text",
+        text: `Installed extensions (${extensions.length}):\n${lines.join("\n")}\n\nPass the ID or name substring as extension_id when connecting.`,
+      }],
+    };
+  }
 
   if (action === "scan") {
     const runningBrowsers = await scanRunningBrowsers();
@@ -261,7 +333,14 @@ export async function handler(args) {
     }
 
     await teardownExistingConnection();
-    const extensionId = await connectToDebugPort(port);
+    await connectToDebugPort(port);
+
+    if (args.extension_id) {
+      const extensionsDir = getExtensionsDirForBrowser("Brave");
+      const resolved = extensionsDir ? resolveExtensionId(args.extension_id, extensionsDir) : null;
+      if (!resolved) throw new Error(`No installed extension found matching "${args.extension_id}". Run action:"list_extensions" to see available extensions.`);
+      state.extensionId = resolved;
+    }
 
     return {
       content: [
@@ -269,7 +348,7 @@ export async function handler(args) {
           type: "text",
           text: [
             `Connected to ${versionInfo.Browser} on port ${port}.`,
-            `Extension ID: ${extensionId || "not detected — open chrome://extensions to find it"}`,
+            `Extension ID: ${state.extensionId || "not detected — run list_extensions to find it"}`,
             "",
             "Your existing tabs and logged-in sessions are preserved.",
             "All other tools (interact_with_popup, inspect_dom, etc.) will now use this browser.",
@@ -292,18 +371,26 @@ export async function handler(args) {
       throw new Error(`${browserName} not found at: ${browserConfig.executable}`);
     }
 
+    const resolveTarget = (nameOrId) => {
+      if (!nameOrId) return null;
+      const resolved = resolveExtensionId(nameOrId, browserConfig.extensionsDir);
+      if (!resolved) throw new Error(`No installed extension found matching "${nameOrId}". Run action:"list_extensions" to see available extensions.`);
+      return resolved;
+    };
+
     // If a browser is already debugging on the target port, just connect to it.
     const alreadyRunning = await fetchCdpVersionInfo(port);
     if (alreadyRunning) {
       await teardownExistingConnection();
-      const extensionId = await connectToDebugPort(port);
+      await connectToDebugPort(port);
+      if (args.extension_id) state.extensionId = resolveTarget(args.extension_id);
       return {
         content: [
           {
             type: "text",
             text: [
               `Browser already running with debugging on port ${port}. Connected to ${alreadyRunning.Browser}.`,
-              `Extension ID: ${extensionId || "not detected"}`,
+              `Extension ID: ${state.extensionId || "not detected"}`,
             ].join("\n"),
           },
         ],
@@ -312,7 +399,8 @@ export async function handler(args) {
 
     await teardownExistingConnection();
     await launchBrowserProcess(browserConfig, port);
-    const extensionId = await connectToDebugPort(port);
+    await connectToDebugPort(port);
+    if (args.extension_id) state.extensionId = resolveTarget(args.extension_id);
 
     return {
       content: [
@@ -321,7 +409,7 @@ export async function handler(args) {
           text: [
             `Launched ${browserName} with remote debugging on port ${port}.`,
             `Profile: ${browserConfig.userDataDir}`,
-            `Extension ID: ${extensionId || "not detected — open chrome://extensions to find it"}`,
+            `Extension ID: ${state.extensionId || "not detected — run list_extensions to find it"}`,
             "",
             "All your existing logins are available.",
             "All other tools (interact_with_popup, inspect_dom, etc.) will now use this browser.",
@@ -331,5 +419,5 @@ export async function handler(args) {
     };
   }
 
-  throw new Error(`Unknown action "${action}". Valid actions: "scan", "connect", "launch".`);
+  throw new Error(`Unknown action "${action}". Valid actions: "scan", "connect", "launch", "list_extensions".`);
 }
