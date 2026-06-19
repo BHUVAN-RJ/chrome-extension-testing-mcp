@@ -43,12 +43,32 @@ export async function ensureBrowser(extensionPath) {
   state.page = await state.browser.newPage();
 }
 
+const RESTRICTED_URL_PREFIXES = ["chrome://", "devtools://", "chrome-extension://", "about:"];
+
+function isNavigablePage(p) {
+  if (p.isClosed()) return false;
+  const url = p.url();
+  return !RESTRICTED_URL_PREFIXES.some((prefix) => url.startsWith(prefix));
+}
+
 export async function ensurePage() {
-  if (!state.page || state.page.isClosed()) {
-    const ctx = state.context || state.browser;
-    if (!ctx) throw new Error("No browser connected. Call load_extension or connect_browser first.");
-    state.page = await ctx.newPage();
+  if (state.page && !state.page.isClosed() && isNavigablePage(state.page)) {
+    return state.page;
   }
+
+  const ctx = state.context || state.browser;
+  if (!ctx) throw new Error("No browser connected. Call load_extension or connect_browser first.");
+
+  // In CDP mode, prefer an existing navigable tab over opening a new one in the user's real browser.
+  if (state.connectionMode === "cdp") {
+    const usable = ctx.pages().find(isNavigablePage);
+    if (usable) {
+      state.page = usable;
+      return state.page;
+    }
+  }
+
+  state.page = await ctx.newPage();
   return state.page;
 }
 

@@ -1,4 +1,4 @@
-import { ensurePage } from "../state.js";
+import { ensurePage, state } from "../state.js";
 
 export const definition = {
   name: "inspect_dom",
@@ -23,8 +23,22 @@ export const definition = {
 };
 
 export async function handler(args) {
-  const p = await ensurePage();
-  if (args.url) await p.goto(args.url, { waitUntil: "domcontentloaded" });
+  let p = await ensurePage();
+
+  if (args.url) {
+    // In CDP mode the active page may be a restricted URL (devtools://, chrome://, chrome-extension://).
+    // Rather than failing to navigate it, open a fresh tab for the requested URL.
+    const currentUrl = p.url();
+    const isRestricted = ["chrome://", "devtools://", "chrome-extension://", "about:"].some(
+      (prefix) => currentUrl.startsWith(prefix)
+    );
+    if (isRestricted && state.connectionMode === "cdp") {
+      const ctx = state.context || state.browser;
+      p = await ctx.newPage();
+      state.page = p;
+    }
+    await p.goto(args.url, { waitUntil: "domcontentloaded" });
+  }
 
   if (args.script) {
     const result = await p.evaluate(args.script);
